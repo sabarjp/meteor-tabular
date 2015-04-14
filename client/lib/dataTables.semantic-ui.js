@@ -1,14 +1,13 @@
-/*! DataTables Bootstrap integration
+/*! DataTables Semantic UI integration
  * ©2011-2014 SpryMedia Ltd - datatables.net/license
  */
 
 /**
- * DataTables integration for Bootstrap 3. This requires Bootstrap 3 and
+ * DataTables integration for Semantic UI. This requires Semantic UI and
  * DataTables 1.10 or newer.
  *
  * This file sets the defaults and adds options to DataTables to style its
- * controls using Bootstrap. See http://datatables.net/manual/styling/bootstrap
- * for further information.
+ * controls using Semantic UI. 
  */
 (function(window, document, undefined){
 
@@ -19,27 +18,63 @@ var factory = function( $, DataTable ) {
 /* Set the defaults for DataTables initialisation */
 $.extend( true, DataTable.defaults, {
 	dom:
-		"<'row'<'col-xs-6'l><'col-xs-6'f>r>" +
-		"<'row'<'col-xs-12't>>" +
-		"<'row'<'col-xs-6'i><'col-xs-6'p>>",
-	renderer: 'bootstrap'
+		"<'two column row dataTables_filter'<'column'l><'column right aligned'<'ui search'f>>r>" +
+		"<'sixteen wide column't>" +
+		"<'two column row'<'column'i><'column'p>>",
+
+	renderer: 'semanticUi',
+
+	oLanguage: {
+		sInfo: 'Showing _START_ to _END_ (of _TOTAL_)',
+		sInfoEmpty: 'Showing 0 entries',
+		sInfoFiltered: '(filtered from _MAX_ total)',
+		sLengthMenu: 'Display _MENU_',
+		sSearch: '',
+		sSearchPlaceholder: 'Search...'
+	},
+
+	/* we want to take advantage of semantic responsive table */
+	bAutoWidth: false
 } );
 
 
 /* Default class modification */
 $.extend( DataTable.ext.classes, {
-	sWrapper:      "dataTables_wrapper form-inline dt-bootstrap",
-	sFilterInput:  "form-control input-sm",
-	sLengthSelect: "form-control input-sm"
+	sWrapper:      "ui stackable sixteen column grid",
+	sFilterInput:  "prompt",
+	sFilter:       "ui input",
+	sLengthSelect: "ui dropdown",
+	sLength:       "ui input"
 } );
 
 
-/* Bootstrap paging button renderer */
-DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, buttons, page, pages ) {
+
+/* Semantic UI filter render */
+DataTable.ext.renderer.header.semanticUi = function ( settings, cell, column, classes ){
+	$(settings.nTable).on('order.dt.DT', function (e, ctx, sorting, columns){
+		if(settings != ctx){
+			return;
+		}
+
+		var colIdx = column.idx;
+
+		cell.removeClass(column.sSortingClass + ' ' + classes.sSortAsc + ' ' +
+			classes.sSortDesc
+		)
+		.addClass(columns[colIdx] == 'asc' ? 
+			classes.sSortAsc : columns[colIdx] == 'desc' ?
+				classes.sSortDesc : 
+					column.sSortingClass
+		);
+	});
+};
+
+/* Semantic UI paging button renderer */
+DataTable.ext.renderer.pageButton.semanticUi = function ( settings, host, idx, buttons, page, pages ) {
 	var api     = new DataTable.Api( settings );
 	var classes = settings.oClasses;
 	var lang    = settings.oLanguage.oPaginate;
-	var btnDisplay, btnClass;
+	var btnDisplay, btnClass, btnPrefixIconClass, btnSuffixIconClass;
 
 	var attach = function( container, buttons ) {
 		var i, ien, node, button;
@@ -59,46 +94,50 @@ DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, bu
 			else {
 				btnDisplay = '';
 				btnClass = '';
+				btnPrefixIconClass = '';
+				btnSuffixIconClass = '';
 
 				switch ( button ) {
 					case 'ellipsis':
 						btnDisplay = '&hellip;';
-						btnClass = 'disabled';
+						btnClass = 'item' + ' disabled';
 						break;
 
 					case 'first':
 						btnDisplay = lang.sFirst;
-						btnClass = button + (page > 0 ?
+						btnClass = button + ' item' + (page > 0 ?
 							'' : ' disabled');
 						break;
 
 					case 'previous':
 						btnDisplay = lang.sPrevious;
-						btnClass = button + (page > 0 ?
+						btnClass = button + ' item' + (page > 0 ?
 							'' : ' disabled');
+						btnPrefixIconClass = 'left arrow icon';
 						break;
 
 					case 'next':
 						btnDisplay = lang.sNext;
-						btnClass = button + (page < pages-1 ?
+						btnClass = button + ' item' + (page < pages-1 ?
 							'' : ' disabled');
+						btnSuffixIconClass = 'right arrow icon';
 						break;
 
 					case 'last':
 						btnDisplay = lang.sLast;
-						btnClass = button + (page < pages-1 ?
+						btnClass = button + ' item' + (page < pages-1 ?
 							'' : ' disabled');
 						break;
 
 					default:
 						btnDisplay = button + 1;
 						btnClass = page === button ?
-							'active' : '';
+							'item active' : 'item';
 						break;
 				}
 
 				if ( btnDisplay ) {
-					node = $('<li>', {
+					node = $('<a>', {
 							'class': classes.sPageButton+' '+btnClass,
 							'aria-controls': settings.sTableId,
 							'tabindex': settings.iTabIndex,
@@ -106,10 +145,14 @@ DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, bu
 								settings.sTableId +'_'+ button :
 								null
 						} )
-						.append( $('<a>', {
-								'href': '#'
+						.append( $('<i>', {
+								'class': btnPrefixIconClass
 							} )
-							.html( btnDisplay )
+						)
+						.append( btnDisplay )
+						.append( $(' <i>', {
+								'class': btnSuffixIconClass
+							} )
 						)
 						.appendTo( container );
 
@@ -122,18 +165,18 @@ DataTable.ext.renderer.pageButton.bootstrap = function ( settings, host, idx, bu
 	};
 
 	attach(
-		$(host).empty().html('<ul class="pagination"/>').children('ul'),
+		$(host).empty().html('<div class="ui borderless pagination menu"/>').children('div'),
 		buttons
 	);
 };
 
 
 /*
- * TableTools Bootstrap compatibility
+ * TableTools Semantic UI compatibility
  * Required TableTools 2.1+
  */
 if ( DataTable.TableTools ) {
-	// Set the classes that TableTools uses to something suitable for Bootstrap
+	// Set the classes that TableTools uses to something suitable for Semantic UI
 	$.extend( true, DataTable.TableTools.classes, {
 		"container": "DTTT btn-group",
 		"buttons": {
@@ -155,7 +198,7 @@ if ( DataTable.TableTools ) {
 		}
 	} );
 
-	// Have the collection use a bootstrap compatible drop down
+	// Have the collection use a Semantic UI compatible drop down
 	$.extend( true, DataTable.TableTools.DEFAULTS.oTags, {
 		"collection": {
 			"container": "ul",

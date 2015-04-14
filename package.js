@@ -19,8 +19,8 @@ Package.onUse(function(api) {
   api.addFiles('server/tabular.js', 'server');
   api.addFiles([
     'client/lib/jquery.dataTables.min.js',
-    'client/lib/dataTables.bootstrap.js',
-    'client/lib/dataTables.bootstrap.css',
+    'client/lib/dataTables.semantic-ui.js',
+    'client/lib/dataTables.semantic-ui.css',
     'client/tabular.html',
     'client/util.js',
     'client/tableRecords.js',
